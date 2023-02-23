@@ -1,4 +1,10 @@
 from tkinter import *
+from tkinter import messagebox
+import pandas as pd
+from pandastable import Table
+import matplotlib.pyplot as plt
+import numpy as np
+import mysql.connector as sql
 
 '''GUI SECTION'''
 
@@ -7,7 +13,6 @@ gui.title('IPL DATA ANALYSIS PROJECT')
 gui.geometry('500x500') # width x height
 gui.minsize(1530, 810) # width , height
 gui.maxsize(2000, 1500) # width , height
-
 
 # Heading frame
 
@@ -96,25 +101,301 @@ team_entry3.grid(row=3, column=4, padx=2, pady=2.5)
 matches_played_entry3.grid(row=3, column=5, padx=2, pady=2.5)
 runs_wicket_entry3.grid(row=3, column=6, padx=2, pady=2.5)
 
+# Function
+
+# Function used in bottom frame
+
+
+def add():
+    try:
+        mysql_connection = sql.connect(host='localhost', user='root', passwd='123456789', database="crickters_data")
+
+        player = name_entry.get()
+        roll = roll_entry.get()
+        team = team_entry.get()
+        matches = matches_played_entry.get()
+        runs_wicket = runs_wicket_entry.get()
+
+        cur = mysql_connection.cursor()
+        query = f"insert into player_data values('{player}','{team}','{roll}',{matches},{runs_wicket});"
+        cur.execute(query)
+        mysql_connection.commit()
+        mysql_connection.close()
+
+        messagebox.showinfo('INFO', 'DATA ADDED TO DATABASE')
+
+        name_entry.delete(0, END)
+        roll_entry.delete(0, END)
+        team_entry.delete(0, END)
+        matches_played_entry.delete(0, END)
+        runs_wicket_entry.delete(0, END)
+
+        mysql_connection.close()
+
+    except Exception as e:
+        messagebox.showwarning('WARNING', 'Error in connecting with Sql')
+        log_label3.config(text='Not connected with SQL')
+
+    else:
+        log_label3.config(text='Added Successful')
+
+
+def search():
+    try:
+        # clear all result column
+        name_entry3.delete(0, END)
+        roll_entry3.delete(0, END)
+        team_entry3.delete(0, END)
+        matches_played_entry3.delete(0, END)
+        runs_wicket_entry.delete(0, END)
+        mysql_connection = sql.connect(host='localhost', user='root', passwd='123456789', database="crickters_data")
+
+        # getting enter data
+        name = name_entry2.get()
+        roll = roll_entry2.get()
+
+        # sql query
+        df = pd.read_sql(f"select * from Player_data where PLAYER='{name}' and ROLL='{roll}';", mysql_connection)
+
+        # inserting data from database
+        Team = df.iloc[:, 1:2]
+        Matches = df.iloc[:, 3:4]
+        R_W = df.iloc[:, 4:]
+
+        name_entry3.insert(0, name)
+        roll_entry3.insert(0, roll)
+        team_entry3.insert(0, Team)
+        matches_played_entry3.insert(0, Matches)
+        runs_wicket_entry3.insert(0, R_W)
+
+        messagebox.showinfo('INFO', 'Data matches to Dataframe')
+
+
+        mysql_connection.close()
+
+    except Exception as e:
+        messagebox.showwarning('WARNING', 'Error in connecting with Sql')
+        log_label3.config(text='Not connected with SQL')
+
+    else:
+        log_label3.config(text='Searched Successful')
+
+# Functions used for graph
+
+
+def g1():
+    log_label3.config(text="Won and Lost Graph")
+    team = list(teams_of_ipl['Abbreviation'])
+    won = list(teams_of_ipl['Won'])
+    lost = list(teams_of_ipl['Lost'])
+
+    plt.bar(team, won, 0.15, label='WON')
+    plt.bar(np.arange(len(team)) + 0.15, lost, 0.15, label='LOST')
+
+    plt.xlabel('Names of team')
+    plt.legend()
+
+    plt.show()
+
+
+def g2():
+    log_label3.config(text="Win% Graph")
+    team = list(teams_of_ipl['Abbreviation'])
+    won = list(teams_of_ipl['Win %'])
+
+    plt.pie(won, labels=team)
+
+    plt.show()
+
+
+def g3():
+    log_label3.config(text="Hatricks Graph")
+    player = list(most_hatricks['PLAYER'])
+    hatricks = list(most_hatricks['NO. of HATRICKS IN IPL'])
+
+    plt.barh(player, hatricks, color='green')
+
+    plt.ylabel('Player name')
+    plt.xlabel('Hatricks')
+
+    plt.show()
+
+
+def g4():
+    log_label3.config(text="Centuries and Half Graph")
+    player = list(most_runs['Player Name'])
+    matches = list(most_runs['Matches'])
+    hc = list(most_runs['50s'])
+    c = list(most_runs['100s'])
+
+    plt.bar(player, matches, 0.15, label='MATCHES PLAYED')
+    plt.bar(np.arange(len(player)) + 0.15, hc, 0.15, label='HALF CENTURIES')
+    plt.bar(np.arange(len(player)) + 0.30, c, 0.15, label='CENTURIES')
+
+    plt.legend()
+    plt.xlabel('Player name')
+
+    plt.show()
+
+
+def g5():
+    log_label3.config(text="Most Sixes Graph")
+    top10 = most_sixes.head(10)
+
+    player = list(top10['PLAYER'])
+    sixes = list(top10['6s'])
+    matches = list(top10['Matches'])
+
+    plt.barh(player, sixes, 0.5, color='green')
+    plt.barh(np.arange(len(player)) + 0.35, matches, 0.5, color='yellow')
+
+    plt.ylabel('Player name')
+    plt.xlabel('Sixes in number of Matches')
+
+    plt.show()
+
+
+def g6():
+    log_label3.config(text="Champion Team Graph")
+    team = list(teams_of_ipl['Abbreviation'])
+    titles = list(teams_of_ipl['Titles'])
+    exp = [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
+
+    plt.pie(titles, labels=team, explode=exp, autopct='%3d%%')
+
+    plt.show()
+
+# Function used for creating table structure
+def table(df):
+    table_df = Table(canvas_b_workspace, dataframe=df, width=900, height=430)
+    table_df.show()
+
+# Functions used in buttons
+
+
+def B1_workspace():
+    log_label3.config(text="Teams of IPL")
+
+    canvas_b_workspace.pack(pady=5)
+
+    table(teams_of_ipl)
+
+
+def B2_workspace():
+    log_label3.config(text="Most Runs Scored")
+
+    canvas_b_workspace.pack(pady=5)
+
+    table(most_runs)
+
+
+def B3_workspace():
+    log_label3.config(text="Most Wicket Taker")
+
+    canvas_b_workspace.pack(pady=5)
+
+    table(wicket_takers)
+
+
+def B4_workspace():
+    log_label3.config(text="Most Sixes")
+
+    canvas_b_workspace.pack(pady=5)
+
+    table(most_sixes)
+
+
+def B5_workspace():
+    log_label3.config(text="Most Hat-ricks")
+
+    canvas_b_workspace.pack(pady=5)
+
+    table(most_hatricks)
+
+
+def B6_workspace():
+    log_label3.config(text="Single Achievement Record")
+
+    canvas_b_workspace.pack(pady=5)
+
+    table(single_acheivement)
+
+
+def B7_workspace():
+    log_label3.config(text="Individual Records")
+
+    canvas_b_workspace.pack(pady=5)
+
+    table(individual_record)
+
+
+def BG_charts():
+
+    log_label3.config(text="Charts and Graphs")
+
+    graph = Tk()
+    graph.title('CHARTS AND GRAPHS')
+    graph.geometry('340x360')
+    graph.maxsize(340, 360)
+
+    frame_graph = Frame(graph, bg="black", borderwidth=7, relief=RIDGE)
+    frame_graph.pack(fill=X)
+
+    b1 = Button(frame_graph, text="               Matches Won Lost             ", font="Cavolini 13 italic",
+                borderwidth=5, relief=RAISED, bg="yellow", fg="green", command=g1)
+    b1.pack(pady=5)
+
+    b2 = Button(frame_graph, text="              WIN% OF TEAMS               ", font="Cavolini 13 italic",
+                borderwidth=5, relief=RAISED, bg="yellow", fg="green", command=g2)
+    b2.pack(pady=5)
+
+    b4 = Button(frame_graph, text="      HATRICKS BY TOP PLAYER      ", font="Cavolini 13 italic",
+                borderwidth=5, relief=RAISED, bg="yellow", fg="green", command=g3)
+    b4.pack(pady=5)
+
+    b3 = Button(frame_graph, text="HALF CENTURIES AND CENTURIES\nBY TOP PLAYER", font="Cavolini 13 italic",
+                borderwidth=5, relief=RAISED, bg="yellow", fg="green", command=g4)
+    b3.pack(pady=5)
+
+    b5 = Button(frame_graph, text="        MOST SIXES BY PLAYER        \nIN MATCHES", font="Cavolini 13 italic",
+                borderwidth=5, relief=RAISED, bg="yellow", fg="green", command=g5)
+    b5.pack(pady=5)
+
+    b6 = Button(frame_graph, text="          THE CHAMPION TEAM          ", font="Cavolini 13 italic",
+                borderwidth=5, relief=RAISED, bg="yellow", fg="green", command=g6)
+    b6.pack(pady=5)
+
+    graph.mainloop()
+
+
+# Buttons of ADD and SEARCH
+
+button_add = Button(frame_bottom, text="   ADD    ", font="Cavolini 13 italic", borderwidth=5, relief=RAISED,
+                    bg="lightblue1", command=add)
+button_add.grid(row=1, column=7, padx=40)
+
+button_search = Button(frame_bottom, text="SEARCH", font="Cavolini 13 italic", borderwidth=5, relief=RAISED,
+                       bg="lightblue1", command=search)
+button_search.grid(row=2, column=7, padx=40, pady=3)
 
 # Buttons of left side
 
 button_1 = Button(frame_left_up, text="                   Teams of IPL                 ", font="Cavolini 13 italic",
-                  borderwidth=5, relief=RAISED, bg="yellow1")
+                  borderwidth=5, relief=RAISED, bg="yellow1", command=B1_workspace)
 button_2 = Button(frame_left_up, text="           MOST RUNS SCORED         ", font="Cavolini 13 italic",
-                  borderwidth=5, relief=RAISED, bg="yellow1")
+                  borderwidth=5, relief=RAISED, bg="yellow1", command=B2_workspace)
 button_3 = Button(frame_left_up, text="          MOST WICKET TAKERS       ", font="Cavolini 13 italic",
-                  borderwidth=5, relief=RAISED, bg="yellow1")
+                  borderwidth=5, relief=RAISED, bg="yellow1", command=B3_workspace)
 button_4 = Button(frame_left_up, text="        MOST SIXES BY PLAYER        ", font="Cavolini 13 italic",
-                  borderwidth=5, relief=RAISED, bg="yellow1")
+                  borderwidth=5, relief=RAISED, bg="yellow1", command=B4_workspace)
 button_5 = Button(frame_left_up, text="               MOST HATRICKS             ", font="Cavolini 13 italic",
-                  borderwidth=5, relief=RAISED, bg="yellow1")
+                  borderwidth=5, relief=RAISED, bg="yellow1", command=B5_workspace)
 button_6 = Button(frame_left_up, text="SINGLE ACHIEVEMENTS RECORD", font="Cavolini 13 italic",
-                  borderwidth=5, relief=RAISED, bg="yellow1")
+                  borderwidth=5, relief=RAISED, bg="yellow1", command=B6_workspace)
 button_7 = Button(frame_left_up, text="          INDIVIDUAL RECORDS        ", font="Cavolini 13 italic",
-                  borderwidth=5, relief=RAISED, bg="yellow1")
+                  borderwidth=5, relief=RAISED, bg="yellow1", command=B7_workspace)
 button_graph = Button(frame_left_up, text="           GRAPHS & CHARTS            ", font="Cavolini 13 italic",
-                      borderwidth=5, relief=RAISED,  bg="yellow1")
+                      borderwidth=5, relief=RAISED,  bg="yellow1", command=BG_charts)
 
 button_1.pack(pady=6, padx=8)
 button_2.pack(pady=6, padx=8)
@@ -141,6 +422,5 @@ log_label3.pack(padx=50)
 log_label2 = Label(frame_left_down, text="WRITE EVERYTHING IN CAPITAL LETTER", bg="black", fg="green",
                    font="Aparajita 10 bold")
 log_label2.pack(padx=43)
-
 
 gui.mainloop()
