@@ -6,6 +6,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import mysql.connector as sql
 
+'''PANDAS SECTION'''
+
+teams_of_ipl = pd.read_csv("Teams of ipl.csv")
+most_runs = pd.read_csv("Runs maker.csv")
+wicket_takers = pd.read_csv("Wicket takers.csv")
+most_sixes = pd.read_csv("Most sixes.csv")
+most_hatricks = pd.read_csv("Most hatricks.csv")
+single_acheivement = pd.read_csv("Single achivement.csv")
+individual_record = pd.read_csv("Individual record.csv")
+
 '''GUI SECTION'''
 
 gui = Tk()
