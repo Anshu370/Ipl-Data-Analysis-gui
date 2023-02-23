@@ -1,12 +1,4 @@
 from tkinter import *
-from tkinter import messagebox
-import pandas as pd
-from pandastable import Table
-import matplotlib.pyplot as plt
-import numpy as np
-import mysql.connector as sql
-
-
 
 '''GUI SECTION'''
 
@@ -15,7 +7,6 @@ gui.title('IPL DATA ANALYSIS PROJECT')
 gui.geometry('500x500') # width x height
 gui.minsize(1530, 810) # width , height
 gui.maxsize(2000, 1500) # width , height
-
 
 
 # Heading frame
@@ -105,10 +96,6 @@ team_entry3.grid(row=3, column=4, padx=2, pady=2.5)
 matches_played_entry3.grid(row=3, column=5, padx=2, pady=2.5)
 runs_wicket_entry3.grid(row=3, column=6, padx=2, pady=2.5)
 
-# Function
-
-
-
 
 # Buttons of left side
 
@@ -139,6 +126,21 @@ button_7.pack(pady=6, padx=8)
 button_graph.pack(pady=6, padx=8)
 
 # Left side Bottom frame
+
+frame_left_down = Frame(frame_left_up, bg="black", borderwidth=7, relief=RIDGE)
+frame_left_down.pack(fill=BOTH, expand=True)
+
+log_label = Label(frame_left_down, text="LOG DATA", bg="black", fg="green",
+                  font="Aparajita 17 bold")
+log_label.pack()
+
+log_label3 = Label(frame_left_down, text="You will see log results", bg="black", fg="green",
+                   font="Aparajita 15 bold")
+log_label3.pack(padx=50)
+
+log_label2 = Label(frame_left_down, text="WRITE EVERYTHING IN CAPITAL LETTER", bg="black", fg="green",
+                   font="Aparajita 10 bold")
+log_label2.pack(padx=43)
 
 
 gui.mainloop()
